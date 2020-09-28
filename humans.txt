@@ -1,0 +1,15 @@
+# humanstxt.org/
+# The humans responsible & technology colophon
+
+/* TEAM */
+
+    Web designer, web developer: Robert Kirsz
+    Site: robertkirsz.pl
+    Location: Warsaw, Poland
+
+/* SITE */
+
+    Last update: 2015/08/24
+    Standards: HTML5, CSS3
+    Components: Modernizr, jQuery, Bootstrap, Fancybox, Grunt, nmp, Sass
+    Software: Sublime Text, FileZilla, Photoshop, Cmder
