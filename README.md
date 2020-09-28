@@ -1,2 +1,5 @@
-# minesweeper
-A Minesweeper game created in JavaScript
+# Minesweeper
+
+A Minesweeper-type game created in JavaScript with jQuery.
+
+One of my first apps ever!
