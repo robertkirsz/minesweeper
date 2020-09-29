@@ -20,6 +20,8 @@ $(function () {
     koniecGry = false,
     $body = $('body')
 
+  $pola.addClass('zakryte')
+
   $iloscBomb.text(iloscBomb)
 
   var zegar = {
@@ -131,6 +133,7 @@ $(function () {
       detonacja()
     } else {
       element.addClass('odkryte')
+      element.removeClass('zakryte')
       var $sasiedzi = naokolo(element).not('.odkryte'), //Zbierz pola graniczące z danym polem
         bombySasiadow = $sasiedzi.filter(function () {
           return $(this).data('rodzaj') === 'bomba'
@@ -214,10 +217,9 @@ $(function () {
     }
   })
 
-  //Kliknięcie prawym przyciskiem na pole
-  $tabela.on('contextmenu', 'td', function () {
+  function rightClick(to) {
     if ($bomby !== null) {
-      var $this = $(this)
+      var $this = $(to)
       //Jeśli pole nie zostało jeszcze odkryte...
       if (!$this.hasClass('odkryte')) {
         //Zaznacz/odznacz pole
@@ -245,9 +247,36 @@ $(function () {
         podlicz()
       }
     }
-    //Zapobiegnij wyświetleniu się menu kontekstowego
-    return false
-    //Jeśli pole zostało już odkryte, nie rób nic
+  }
+
+  function isTouchDevice() {
+    try {
+      document.createEvent('TouchEvent')
+      return true
+    } catch (e) {
+      return false
+    }
+  }
+
+  if (isTouchDevice()) {
+    $tabela.on('contextmenu', 'td', () => false)
+  } else {
+    $tabela.on('contextmenu', 'td', function () {
+      rightClick(this)
+      return false
+    })
+  }
+
+  var touchTimeout = null
+
+  $tabela.on('touchstart', 'td', function () {
+    touchTimeout = setTimeout(() => {
+      rightClick(this)
+    }, 300)
+  })
+
+  $tabela.on('touchend', 'td', function () {
+    clearTimeout(touchTimeout)
   })
 
   //Zapełnianie tabeli bombami
@@ -292,7 +321,7 @@ $(function () {
   $('.reset').on('click', function () {
     if (!$(this).hasClass('disabled')) {
       zegar.zeruj()
-      $pola.removeClass().empty().data('rodzaj', '')
+      $pola.removeClass().addClass('zakryte').empty().data('rodzaj', '')
       $bomby = null
       koniecGry = false
       $iloscBomb.text(iloscBomb)
