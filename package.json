@@ -2,17 +2,18 @@
   "name": "minesweeper",
   "version": "1.0.0",
   "description": "A Minesweeper-type game created in JavaScript with jQuery.",
-  "main": "index.js",
+  "author": "Robert Kirsz <robert.kirsz@gmail.com> (https://robertkirsz.com)",
+  "license": "MIT",
   "scripts": {
     "watch": "gulp",
-    "serve": "http-server"
+    "lint": "eslint --fix './js/main.js'",
+    "prettier": "prettier --write './js/main.js'"
   },
-  "author": "Robert Kirsz <robert.kirsz@gmail.com>",
-  "license": "ISC",
   "devDependencies": {
+    "eslint": "7.10.0",
     "gulp": "4.0.2",
     "gulp-sass": "4.1.0",
-    "http-server": "0.12.3",
-    "node-sass": "4.14.1"
+    "node-sass": "4.14.1",
+    "prettier": "2.1.2"
   }
 }
