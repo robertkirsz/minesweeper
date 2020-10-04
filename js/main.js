@@ -9,10 +9,10 @@ $(function () {
 
   var $tabela = $('#tabela'),
     $pola = $('#tabela td'),
-    $iloscBomb = $('#iloscBomb'),
-    iloscBomb = 15,
+    $liczbaBomb = $('#liczbaBomb'),
+    liczbaBomb = 10,
     iloscOznaczonychBomb = 0,
-    skokBomb = 100 / iloscBomb,
+    skokBomb = 100 / liczbaBomb,
     iloscPol = $pola.size(),
     $bomby = null,
     $minuty = $('#czas .minuty'),
@@ -22,7 +22,7 @@ $(function () {
 
   $pola.addClass('zakryte')
 
-  $iloscBomb.text(iloscBomb)
+  $liczbaBomb.text(liczbaBomb)
 
   var zegar = {
     sekundy: 0,
@@ -49,7 +49,7 @@ $(function () {
       zegar.minuty = 0
       $sekundy.text('00')
       $minuty.text('0')
-    }
+    },
   }
 
   function detonacja() {
@@ -59,10 +59,7 @@ $(function () {
       $bomby.each(function () {
         if ($(this).hasClass('zaznaczone')) {
           //..na zielono, jeśli zostały zaznaczone
-          $(this)
-            .removeClass('zaznaczone')
-            .addClass('dobrze')
-            .prepend('<span class="fa fa-check"></span>')
+          $(this).removeClass('zaznaczone').addClass('dobrze').prepend('<span class="fa fa-check"></span>')
         } else {
           //...na czerwono, jeśli nie zostały zaznaczone
           $(this).addClass('bomba').prepend('<span class="fa fa-bomb"></span>')
@@ -79,10 +76,7 @@ $(function () {
 
   function podlicz() {
     //Jeśli zaznaczono wszystkie bomby i żadne pola nie zostały zakryte...
-    if (
-      $bomby.filter('.zaznaczone').length == iloscBomb &&
-      $pola.filter(':not([class]), [class=""]').length == 0
-    ) {
+    if ($bomby.filter('.zaznaczone').length == liczbaBomb && $pola.filter(':not([class]), [class=""]').length == 0) {
       $tabela.css('pointer-events', 'none')
       zegar.stop()
       koniecGry = true
@@ -90,10 +84,7 @@ $(function () {
       $bomby.each(function () {
         if ($(this).hasClass('zaznaczone')) {
           //..na zielono, jeśli zostały zaznaczone
-          $(this)
-            .removeClass('zaznaczone')
-            .addClass('dobrze')
-            .prepend('<span class="fa fa-check"></span>')
+          $(this).removeClass('zaznaczone').addClass('dobrze').prepend('<span class="fa fa-check"></span>')
         }
       })
     }
@@ -105,10 +96,7 @@ $(function () {
       saturation = 40
     }
 
-    $body.css(
-      'background-color',
-      'hsla(' + hue + ', ' + saturation + '%, 70%, 0.5'
-    )
+    $body.css('background-color', 'hsla(' + hue + ', ' + saturation + '%, 70%, 0.5')
   }
 
   function naokolo(element) {
@@ -128,7 +116,7 @@ $(function () {
       .add($trNizej.find('td').eq($index).next())
   }
 
-  function iloscBombNaokolo(element) {
+  function liczbaBombNaokolo(element) {
     if (element.data('rodzaj') === 'bomba') {
       detonacja()
     } else {
@@ -146,7 +134,7 @@ $(function () {
           .not('.odkryte')
           .not('.zaznaczone')
           .each(function () {
-            iloscBombNaokolo($(this))
+            liczbaBombNaokolo($(this))
           })
       }
       //Wyświetl łączną ilość bomb w graniczących z danym polem elementach
@@ -183,10 +171,7 @@ $(function () {
       utworzBomby($(this).parent().index() * 10 + $(this).index())
       $('.reset').removeClass('disabled')
       zegar.start()
-      $('body').css(
-        'background-color',
-        'hsla(' + iloscOznaczonychBomb * skokBomb + ', 40%, 70%, 0.5'
-      )
+      $('body').css('background-color', 'hsla(' + iloscOznaczonychBomb * skokBomb + ', 40%, 70%, 0.5')
     }
 
     //Jeśli kliknięto na odkryte pole...
@@ -198,7 +183,7 @@ $(function () {
           .not('.odkryte')
           .not('.zaznaczone')
           .each(function () {
-            iloscBombNaokolo($(this))
+            liczbaBombNaokolo($(this))
           })
         shiftNaokolo.removeClass('hover')
         //Sprawdź czy znaleziono wszystkie bomby
@@ -211,7 +196,7 @@ $(function () {
       detonacja()
       //Jeśli kliknięto na zwykłe pole, wyświetl liczbę bomb z nim sąsiadujących
     } else {
-      iloscBombNaokolo($(this))
+      liczbaBombNaokolo($(this))
       //Sprawdź czy znaleziono wszystkie bomby
       podlicz()
     }
@@ -226,21 +211,17 @@ $(function () {
         if ($this.hasClass('zaznaczone')) {
           $this.removeClass('zaznaczone').find('.fa-flag').css('opacity', 0)
           //Jeśli nie postawiono jeszcze ikony flagi i nie przekroczono limitu oznaczeń...
-        } else if (iloscBomb - iloscOznaczonychBomb > 0) {
+        } else if (liczbaBomb - iloscOznaczonychBomb > 0) {
           if ($this.find('.fa-flag').length == 0) {
             $this.prepend('<span class="fa fa-flag"></span>')
           }
 
-          $this
-            .addClass('zaznaczone')
-            .find('.fa-flag')
-            .focus()
-            .css('opacity', 1)
+          $this.addClass('zaznaczone').find('.fa-flag').focus().css('opacity', 1)
         }
 
         //Zaktualizuj licznik
         iloscOznaczonychBomb = $pola.filter('.zaznaczone').length
-        $iloscBomb.text(iloscBomb - iloscOznaczonychBomb)
+        $liczbaBomb.text(liczbaBomb - iloscOznaczonychBomb)
         //Zmiana koloru tła - im więcej bomb znaleziono tym kolor bardziej zielony
         kolorTla(iloscOznaczonychBomb * skokBomb)
         //Sprawdź czy znaleziono wszystkie bomby
@@ -283,10 +264,10 @@ $(function () {
   function utworzBomby(wykluczonePole) {
     var tablicaIndeksow = [] //Tablica zawięrająca indeksy pól, które zostano przerobione na bomby
     //Sprawdź czy ilość bomb do wypełnienia tablicy jest mniejsza niż ilość dostępnych pól
-    if (iloscBomb < iloscPol) {
+    if (liczbaBomb < iloscPol) {
       //Dopóki ilość indeksów jest mniejsza niż zadeklarowana ilość bomb, którymi ma zostać wypełniona tabela...
-      while (tablicaIndeksow.length < iloscBomb) {
-        var losowaLiczba = generateRandom(0, iloscPol - 1, wykluczonePole), //Liczba od 0 do iloscBomb - 1
+      while (tablicaIndeksow.length < liczbaBomb) {
+        var losowaLiczba = generateRandom(0, iloscPol - 1, wykluczonePole), //Liczba od 0 do liczbaBomb - 1
           znaleziono = false //Domyślna wartość dla zmiennej pilnującej, czy liczby się nie powtarzają
         //console.log(losowaLiczba);
         //Przeszukaj wszystkie dotychczas zebrane numery
@@ -324,7 +305,7 @@ $(function () {
       $pola.removeClass().addClass('zakryte').empty().data('rodzaj', '')
       $bomby = null
       koniecGry = false
-      $iloscBomb.text(iloscBomb)
+      $liczbaBomb.text(liczbaBomb)
       iloscOznaczonychBomb = 0
       $tabela.css('pointer-events', 'auto')
       kolorTla(0, 0)
@@ -340,29 +321,20 @@ $(function () {
   $('.pomoc').on('click', function () {
     if ($sterowanie.is(':visible')) {
       $sterowanie.removeClass('active')
-      $('.pomoc')
-        .find('.fa')
-        .removeClass('fa-times-circle obrot')
-        .addClass('fa-question-circle')
+      $('.pomoc').find('.fa').removeClass('fa-times-circle obrot').addClass('fa-question-circle')
       mobileTimer = setTimeout(function () {
         $sterowanie.hide()
       }, 200)
     } else {
       clearTimeout(mobileTimer)
-      $('.pomoc')
-        .find('.fa')
-        .removeClass('fa-question-circle')
-        .addClass('fa-times-circle obrot')
+      $('.pomoc').find('.fa').removeClass('fa-question-circle').addClass('fa-times-circle obrot')
       $sterowanie.show().focus().addClass('active')
     }
   })
 
   $('.sterowanie').on('click', function () {
     $sterowanie.removeClass('active')
-    $('.pomoc')
-      .find('.fa')
-      .removeClass('fa-times-circle obrot')
-      .addClass('fa-question-circle')
+    $('.pomoc').find('.fa').removeClass('fa-times-circle obrot').addClass('fa-question-circle')
     mobileTimer = setTimeout(function () {
       $sterowanie.hide()
     }, 300)
