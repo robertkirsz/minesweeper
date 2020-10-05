@@ -1,28 +1,35 @@
-/* -------------------  /
-/  Autor: Robert Kirsz  /
-/ -------------------- */
-
 $(function () {
-  /**/
-  'use strict'
-  /**/
+  var $liczbaBomb = $('#liczbaBomb')
+  var liczbaBomb = 15
+  var liczbaOznaczonychBomb = 0
+  var skokBomb = 40 / liczbaBomb
+  var lumberOfColumns = 10
+  var numberOfFields = lumberOfColumns * lumberOfColumns
+  var $bomby = null
+  var $minuty = $('#czas .minuty')
+  var $sekundy = $('#czas .sekundy')
+  var touchTimeout = null
+  var $aside = $('aside')
+  var mobileTimer
 
-  var $tabela = $('#tabela'),
-    $pola = $('#tabela td'),
-    $liczbaBomb = $('#liczbaBomb'),
-    liczbaBomb = 10,
-    iloscOznaczonychBomb = 0,
-    skokBomb = 100 / liczbaBomb,
-    iloscPol = $pola.size(),
-    $bomby = null,
-    $minuty = $('#czas .minuty'),
-    $sekundy = $('#czas .sekundy'),
-    koniecGry = false,
-    $body = $('body')
-
-  $pola.addClass('zakryte')
+  const $body = $('body')
+  const $grid = $('#grid')
+  const $reset = $('.reset')
 
   $liczbaBomb.text(liczbaBomb)
+
+  function generateGrid() {
+    for (var i = 0; i < numberOfFields; i++) {
+      $grid.append($('<div class="zakryte" />'))
+    }
+
+    $grid.css('grid-template-columns', `repeat(${lumberOfColumns}, 1fr)`)
+    $grid.css('grid-template-rows', `repeat(${lumberOfColumns}, 1fr)`)
+  }
+
+  generateGrid()
+
+  const $pola = $('#grid > div')
 
   var zegar = {
     sekundy: 0,
@@ -49,97 +56,141 @@ $(function () {
       zegar.minuty = 0
       $sekundy.text('00')
       $minuty.text('0')
-    },
-  }
-
-  function detonacja() {
-    //Odkryj wszystkie bomby i pokoloruj je...
-    if (!koniecGry) {
-      $('.fa-flag').remove()
-      $bomby.each(function () {
-        if ($(this).hasClass('zaznaczone')) {
-          //..na zielono, jeśli zostały zaznaczone
-          $(this).removeClass('zaznaczone').addClass('dobrze').prepend('<span class="fa fa-check"></span>')
-        } else {
-          //...na czerwono, jeśli nie zostały zaznaczone
-          $(this).addClass('bomba').prepend('<span class="fa fa-bomb"></span>')
-        }
-      })
-      //Nieprawidłowe zaznaczenia oznacz ikoną krzyżyka
-      $pola.filter('.zaznaczone').prepend('<span class="fa fa-times"></span>')
-      $tabela.css('pointer-events', 'none')
-      zegar.stop()
-      koniecGry = true
-      kolorTla(0)
     }
   }
 
-  function podlicz() {
-    //Jeśli zaznaczono wszystkie bomby i żadne pola nie zostały zakryte...
-    if ($bomby.filter('.zaznaczone').length == liczbaBomb && $pola.filter(':not([class]), [class=""]').length == 0) {
-      $tabela.css('pointer-events', 'none')
-      zegar.stop()
-      koniecGry = true
-      $('.fa-flag').remove()
-      $bomby.each(function () {
-        if ($(this).hasClass('zaznaczone')) {
-          //..na zielono, jeśli zostały zaznaczone
-          $(this).removeClass('zaznaczone').addClass('dobrze').prepend('<span class="fa fa-check"></span>')
-        }
-      })
-    }
+  function win() {
+    $grid.css('pointer-events', 'none')
+    zegar.stop()
+    $('.fa-flag').remove()
+    kolorTla(100, 80)
+
+    $bomby.each(function () {
+      if ($(this).hasClass('zaznaczone')) {
+        //..na zielono, jeśli zostały zaznaczone
+        $(this).removeClass('zaznaczone').addClass('dobrze').prepend('<span class="fa fa-check"></span>')
+      }
+    })
   }
 
-  //Funkcja zmiany kolory tła
+  function lose() {
+    $('.fa-flag').remove()
+
+    $bomby.each(function () {
+      if (isFlag(this)) {
+        removeFlag(this)
+        putCheckmark(this)
+      } else {
+        putBomb(this)
+      }
+    })
+
+    $pola.filter('.zaznaczone').prepend('<span class="fa fa-times"></span>')
+
+    $pola
+      .filter('.zakryte')
+      .not('.zaznaczone')
+      .removeClass('zakryte')
+      .addClass('odkryte')
+      .each((_, element) => {
+        const numberOfBombs = $(element).data('number')
+        if (numberOfBombs > 0) $(element).text(numberOfBombs)
+      })
+
+    $grid.css('pointer-events', 'none')
+    kolorTla(0, 60)
+    zegar.stop()
+  }
+
+  function checkGame() {
+    const hasAllBombsMarked = $bomby.filter('.zaznaczone').length === liczbaBomb
+    const hasNoUncoveredFields = $pola.filter('.zakryte').not('.zaznaczone').length === 0
+
+    if (hasAllBombsMarked && hasNoUncoveredFields) win()
+  }
+
   function kolorTla(hue, saturation) {
-    if (typeof saturation === 'undefined' || saturation === null) {
-      saturation = 40
-    }
-
     $body.css('background-color', 'hsla(' + hue + ', ' + saturation + '%, 70%, 0.5')
   }
 
-  function naokolo(element) {
-    var $this = $(element),
-      $index = $this.index(),
-      $trWyzej = $this.parent().prev(),
-      $trNizej = $this.parent().next()
+  const neighbors = indexInRow => index => index >= indexInRow - 1 && index <= indexInRow + 1
 
-    return $this
-      .add($this.prev())
-      .add($this.next())
-      .add($trWyzej.find('td').eq($index))
-      .add($trWyzej.find('td').eq($index).prev())
-      .add($trWyzej.find('td').eq($index).next())
-      .add($trNizej.find('td').eq($index))
-      .add($trNizej.find('td').eq($index).prev())
-      .add($trNizej.find('td').eq($index).next())
+  function around(index) {
+    if (index < 0) return $()
+
+    const currentRowIndex = Math.floor(index / lumberOfColumns)
+    const upperRowIndex = currentRowIndex - 1
+    const lowerRowIndex = currentRowIndex + 1
+
+    const currentRowStart = currentRowIndex * lumberOfColumns
+    const upperRowStart = upperRowIndex * lumberOfColumns
+    const lowerRowStart = lowerRowIndex * lumberOfColumns
+
+    const currentRowEnd = currentRowStart + lumberOfColumns
+    const upperRowEnd = upperRowStart + lumberOfColumns
+    const lowerRowEnd = lowerRowStart + lumberOfColumns
+
+    const indexInCurrentRow = index - lumberOfColumns * currentRowIndex
+
+    const upperRow = $pola.slice(upperRowStart, upperRowEnd).filter(neighbors(indexInCurrentRow))
+    const currentRow = $pola.slice(currentRowStart, currentRowEnd).filter(neighbors(indexInCurrentRow))
+    const lowerRow = $pola.slice(lowerRowStart, lowerRowEnd).filter(neighbors(indexInCurrentRow))
+
+    return upperRow.add(currentRow).add(lowerRow)
   }
 
-  function liczbaBombNaokolo(element) {
-    if (element.data('rodzaj') === 'bomba') {
-      detonacja()
-    } else {
-      element.addClass('odkryte')
-      element.removeClass('zakryte')
-      var $sasiedzi = naokolo(element).not('.odkryte'), //Zbierz pola graniczące z danym polem
-        bombySasiadow = $sasiedzi.filter(function () {
-          return $(this).data('rodzaj') === 'bomba'
-        }).length //Policz ile z tych pól zawiera bombę
+  function isBomb(field) {
+    const $field = field instanceof HTMLElement ? $(field) : field
 
-      //Jeśli nie ma bomb, to zamiast pisać 0 zostaw puste pole i zapisz element do tablicy, która później zostanie przetworzona ponownie
-      if (bombySasiadow < 1) {
-        bombySasiadow = ''
-        naokolo(element)
-          .not('.odkryte')
-          .not('.zaznaczone')
-          .each(function () {
-            liczbaBombNaokolo($(this))
-          })
-      }
-      //Wyświetl łączną ilość bomb w graniczących z danym polem elementach
-      element.text(bombySasiadow)
-    }
+    return $field.data('rodzaj') === 'bomba'
+  }
+
+  function putBomb(field) {
+    const $field = field instanceof HTMLElement ? $(field) : field
+
+    $field.addClass('bomba').prepend('<span class="fa fa-bomb" />')
+  }
+
+  function isFlag(field) {
+    const $field = field instanceof HTMLElement ? $(field) : field
+
+    return $field.hasClass('zaznaczone')
+  }
+
+  function putCheckmark(field) {
+    const $field = field instanceof HTMLElement ? $(field) : field
+
+    $field.addClass('dobrze').prepend('<span class="fa fa-check" />')
+  }
+
+  function putFlag(field) {
+    const $field = field instanceof HTMLElement ? $(field) : field
+
+    $field.addClass('zaznaczone').prepend('<span class="fa fa-flag" />')
+  }
+
+  function removeFlag(field) {
+    const $field = field instanceof HTMLElement ? $(field) : field
+
+    $field.removeClass('zaznaczone').find('.fa-flag').remove()
+  }
+
+  function odkryjPole(field) {
+    const $field = field instanceof HTMLElement ? $(field) : field
+
+    if (isBomb($field)) return lose()
+
+    if (isFlag($field)) return removeFlag($field)
+
+    $field.removeClass('zakryte').addClass('odkryte')
+
+    const numberOfBombs = $field.data('number')
+
+    if (numberOfBombs === 0) {
+      around($field.index())
+        .filter('.zakryte')
+        .each((_, element) => !isBomb(element) && odkryjPole(element))
+    } else if (numberOfBombs > 0) $field.text(numberOfBombs)
   }
 
   function generateRandom(min, max, wykluczona) {
@@ -147,86 +198,110 @@ $(function () {
     return num === wykluczona ? generateRandom(min, max, wykluczona) : num
   }
 
-  var shiftNaokolo = $()
+  function generateNumbers() {
+    $pola
+      .filter((_, element) => $(element).data('rodzaj') !== 'bomba')
+      .each((_, element) => {
+        const numberOfSurroundingBombs = around($(element).index()).filter(
+          (_, element) => $(element).data('rodzaj') === 'bomba'
+        ).length
 
-  $(document).on('keydown', function (e) {
-    if (e.shiftKey) {
-      shiftNaokolo = naokolo($('.odkryte:hover'))
-      shiftNaokolo.addClass('hover')
-    }
-  })
+        $(element).data('number', numberOfSurroundingBombs)
+      })
+  }
 
-  $(document).on('keyup', function (e) {
-    shiftNaokolo.removeClass('hover')
-  })
+  function firstClick($field) {
+    plantBombs($field.index())
+    generateNumbers()
+    $reset.removeClass('disabled')
+    zegar.start()
+    kolorTla(100, 0)
+  }
 
-  $tabela.on('mouseleave', '.odkryte', function () {
-    shiftNaokolo.removeClass('hover')
-  })
+  function leftClick(event) {
+    var $this = $(this)
 
-  //Kliknięcie lewym przyciskiem na pole
-  $tabela.on('click', 'td', function (e) {
-    //Jeśli to pierwsze kliknięcie na pole...
-    if ($bomby === null) {
-      utworzBomby($(this).parent().index() * 10 + $(this).index())
-      $('.reset').removeClass('disabled')
-      zegar.start()
-      $('body').css('background-color', 'hsla(' + iloscOznaczonychBomb * skokBomb + ', 40%, 70%, 0.5')
-    }
+    if ($bomby === null) firstClick($this)
 
     //Jeśli kliknięto na odkryte pole...
-    if ($(this).hasClass('odkryte')) {
-      //Nie rób nic, chyba że przytrzymano klawisz Shift
-      if (e.shiftKey) {
-        //Wtedy odkryj wszystkie nieodkryte jeszcze pola naokoło klikniętego
-        naokolo($(this))
-          .not('.odkryte')
-          .not('.zaznaczone')
-          .each(function () {
-            liczbaBombNaokolo($(this))
-          })
-        shiftNaokolo.removeClass('hover')
-        //Sprawdź czy znaleziono wszystkie bomby
-        podlicz()
-      }
-      //Jeśli kliknięto na zaznaczone pole...
-    } else if ($(this).hasClass('zaznaczone')) {
-      //Jeśli kliknięto na bombę...
-    } else if ($(this).data('rodzaj') === 'bomba') {
-      detonacja()
-      //Jeśli kliknięto na zwykłe pole, wyświetl liczbę bomb z nim sąsiadujących
-    } else {
-      liczbaBombNaokolo($(this))
-      //Sprawdź czy znaleziono wszystkie bomby
-      podlicz()
+    if ($this.hasClass('odkryte') && event.shiftKey) {
+      //Wtedy odkryj wszystkie nieodkryte jeszcze pola naokoło klikniętego
+      around($this.index())
+        .not('.zaznaczone')
+        .each((_, element) => odkryjPole(element))
+
+      $pola.removeClass('hover')
     }
-  })
 
-  function rightClick(to) {
+    if (isFlag($this)) return removeFlag($this)
+
+    if (isBomb($this)) return lose()
+
+    odkryjPole($this)
+    //Sprawdź czy znaleziono wszystkie bomby
+    checkGame()
+  }
+
+  function rightClick(field) {
+    // TODO: fix this (I wanna be able to mark on first click)
     if ($bomby !== null) {
-      var $this = $(to)
-      //Jeśli pole nie zostało jeszcze odkryte...
-      if (!$this.hasClass('odkryte')) {
-        //Zaznacz/odznacz pole
-        if ($this.hasClass('zaznaczone')) {
-          $this.removeClass('zaznaczone').find('.fa-flag').css('opacity', 0)
-          //Jeśli nie postawiono jeszcze ikony flagi i nie przekroczono limitu oznaczeń...
-        } else if (liczbaBomb - iloscOznaczonychBomb > 0) {
-          if ($this.find('.fa-flag').length == 0) {
-            $this.prepend('<span class="fa fa-flag"></span>')
-          }
+      const $field = $(field)
 
-          $this.addClass('zaznaczone').find('.fa-flag').focus().css('opacity', 1)
+      if ($field.hasClass('odkryte')) return
+
+      if ($field.hasClass('zaznaczone')) {
+        removeFlag($field)
+      } else if (liczbaBomb - liczbaOznaczonychBomb > 0) {
+        putFlag($field)
+      }
+
+      //Zaktualizuj licznik
+      liczbaOznaczonychBomb = $pola.filter('.zaznaczone').length
+      $liczbaBomb.text(liczbaBomb - liczbaOznaczonychBomb)
+      //Zmiana koloru tła - im więcej bomb znaleziono tym kolor bardziej zielony
+      kolorTla(100, liczbaOznaczonychBomb * skokBomb)
+      //Sprawdź czy znaleziono wszystkie bomby
+      checkGame()
+    }
+  }
+
+  function plantBombs(wykluczonePole) {
+    var tablicaIndeksow = [] // Tablica zawięrająca indeksy pól, które zostano przerobione na bomby
+    // Sprawdź czy ilość bomb do wypełnienia tablicy jest mniejsza niż ilość dostępnych pól
+    if (liczbaBomb < numberOfFields) {
+      // Dopóki ilość indeksów jest mniejsza niż zadeklarowana ilość bomb, którymi ma zostać wypełniona tabela...
+      while (tablicaIndeksow.length < liczbaBomb) {
+        var losowaLiczba = generateRandom(0, numberOfFields - 1, wykluczonePole), // Liczba od 0 do liczbaBomb - 1
+          znaleziono = false // Domyślna wartość dla zmiennej pilnującej, czy liczby się nie powtarzają
+
+        // Przeszukaj wszystkie dotychczas zebrane numery
+        for (var i = 0; i < tablicaIndeksow.length; i++) {
+          // Jeśli wsród nich jest indeks pierwszego klikniętego pola, lub jakiś indeks się powtarza, wylosuj inną liczbę
+          if (tablicaIndeksow[i] === losowaLiczba) {
+            znaleziono = true
+            break
+          }
         }
 
-        //Zaktualizuj licznik
-        iloscOznaczonychBomb = $pola.filter('.zaznaczone').length
-        $liczbaBomb.text(liczbaBomb - iloscOznaczonychBomb)
-        //Zmiana koloru tła - im więcej bomb znaleziono tym kolor bardziej zielony
-        kolorTla(iloscOznaczonychBomb * skokBomb)
-        //Sprawdź czy znaleziono wszystkie bomby
-        podlicz()
+        // Jeśli numer się nie powtarza...
+        if (!znaleziono) {
+          // Zapisz go w tablicy
+          tablicaIndeksow[tablicaIndeksow.length] = losowaLiczba
+          // Utwórz bombę na polu o indeksie równym wylosowanej liczbie
+          $pola.eq(losowaLiczba).data('rodzaj', 'bomba')
+        }
       }
+
+      // Zapisz bomby do zmiennej
+      $bomby = $pola.filter(function () {
+        return $(this).data('rodzaj') === 'bomba'
+      })
+
+      // DEVTOOLS
+      // $bomby.addClass('has-bomb')
+    } else {
+      // Jeśli ilość bomb nie jest mniejsza niż ilość pól, wyświetl wiadomość
+      console.error('Liczba bomb musi być mniejsza niż liczba pól')
     }
   }
 
@@ -239,128 +314,78 @@ $(function () {
     }
   }
 
+  function resize() {
+    $grid.css('height', $grid.width())
+  }
+
   if (isTouchDevice()) {
-    $tabela.on('contextmenu', 'td', () => false)
+    $grid.on('contextmenu', '> div', () => false)
   } else {
-    $tabela.on('contextmenu', 'td', function () {
+    $grid.on('contextmenu', '> div', function () {
       rightClick(this)
       return false
     })
   }
 
-  var touchTimeout = null
+  $grid.on('click', '> div', leftClick)
 
-  $tabela.on('touchstart', 'td', function () {
+  $grid.on('touchstart', '> div', function () {
     touchTimeout = setTimeout(() => {
       rightClick(this)
     }, 300)
   })
 
-  $tabela.on('touchend', 'td', function () {
+  $grid.on('touchend', '> div', function () {
     clearTimeout(touchTimeout)
   })
 
-  //Zapełnianie tabeli bombami
-  function utworzBomby(wykluczonePole) {
-    var tablicaIndeksow = [] //Tablica zawięrająca indeksy pól, które zostano przerobione na bomby
-    //Sprawdź czy ilość bomb do wypełnienia tablicy jest mniejsza niż ilość dostępnych pól
-    if (liczbaBomb < iloscPol) {
-      //Dopóki ilość indeksów jest mniejsza niż zadeklarowana ilość bomb, którymi ma zostać wypełniona tabela...
-      while (tablicaIndeksow.length < liczbaBomb) {
-        var losowaLiczba = generateRandom(0, iloscPol - 1, wykluczonePole), //Liczba od 0 do liczbaBomb - 1
-          znaleziono = false //Domyślna wartość dla zmiennej pilnującej, czy liczby się nie powtarzają
-        //console.log(losowaLiczba);
-        //Przeszukaj wszystkie dotychczas zebrane numery
-        for (var i = 0; i < tablicaIndeksow.length; i++) {
-          //Jeśli wsród nich jest indeks pierwszego klikniętego pola, lub jakiś indeks się powtarza, wylosuj inną liczbę
-          if (tablicaIndeksow[i] === losowaLiczba) {
-            znaleziono = true
-            break
-          }
-        }
-
-        //Jeśli numer się nie powtarza...
-        if (!znaleziono) {
-          //Zapisz go w tablicy
-          tablicaIndeksow[tablicaIndeksow.length] = losowaLiczba
-          //Utwórz bombę na polu o indeksie równym wylosowanej liczbie
-          $pola.eq(losowaLiczba).data('rodzaj', 'bomba')
-        }
-      }
-
-      //Zapisz bomby do zmiennej
-      $bomby = $pola.filter(function () {
-        return $(this).data('rodzaj') === 'bomba'
-      })
-      //$bomby.text('o');
-      //Jeśli ilość bomb nie jest mniejsza niż ilość pól, wyświetl wiadomość
-    } else {
-      console.log('Ilość bomb musi być mniejsza niż ilość pól')
-    }
-  }
+  $grid.on('mouseleave', '> div', () => $pola.removeClass('hover'))
 
   $('.reset').on('click', function () {
-    if (!$(this).hasClass('disabled')) {
-      zegar.zeruj()
-      $pola.removeClass().addClass('zakryte').empty().data('rodzaj', '')
-      $bomby = null
-      koniecGry = false
-      $liczbaBomb.text(liczbaBomb)
-      iloscOznaczonychBomb = 0
-      $tabela.css('pointer-events', 'auto')
-      kolorTla(0, 0)
-      $(this).addClass('disabled')
-    }
+    if ($(this).hasClass('disabled')) return
+
+    zegar.zeruj()
+    $pola.removeClass().addClass('zakryte').empty().data('rodzaj', '')
+    $bomby = null
+    $liczbaBomb.text(liczbaBomb)
+    liczbaOznaczonychBomb = 0
+    $grid.css('pointer-events', 'auto')
+    kolorTla(0, 0)
+    $(this).addClass('disabled')
   })
 
-  var $sterowanie = $('.sterowanie')
-
-  var mobileTimer,
-    $sterowanie = $('.sterowanie')
-
   $('.pomoc').on('click', function () {
-    if ($sterowanie.is(':visible')) {
-      $sterowanie.removeClass('active')
-      $('.pomoc').find('.fa').removeClass('fa-times-circle obrot').addClass('fa-question-circle')
+    if ($aside.is(':visible')) {
+      $aside.removeClass('active')
+
+      $('.pomoc').find('.fa').removeClass('fa-times-circle').addClass('fa-question-circle')
+
       mobileTimer = setTimeout(function () {
-        $sterowanie.hide()
+        $aside.hide()
       }, 200)
     } else {
       clearTimeout(mobileTimer)
-      $('.pomoc').find('.fa').removeClass('fa-question-circle').addClass('fa-times-circle obrot')
-      $sterowanie.show().focus().addClass('active')
+      $('.pomoc').find('.fa').removeClass('fa-question-circle').addClass('fa-times-circle')
+      $aside.show().focus().addClass('active')
     }
   })
 
-  $('.sterowanie').on('click', function () {
-    $sterowanie.removeClass('active')
-    $('.pomoc').find('.fa').removeClass('fa-times-circle obrot').addClass('fa-question-circle')
+  $aside.on('click', function () {
+    $aside.removeClass('active')
+    $('.pomoc').find('.fa').removeClass('fa-times-circle').addClass('fa-question-circle')
+
     mobileTimer = setTimeout(function () {
-      $sterowanie.hide()
+      $aside.hide()
     }, 300)
   })
 
-  var $naglowek = $('.naglowek'),
-    $content = $('#content')
-
-  function resize() {
-    //$tabela.css('width', $(window).height() - $naglowek.height());
-    $content.css('width', $(window).height() - $naglowek.height())
-    if ($(window).width() < 800) {
-      $content.css('max-width', $(window).width())
-    } else {
-      $content.css('max-width', '800px')
-    }
-    $tabela.css('height', $tabela.width())
-    $tabela.css('max-height', $tabela.width())
-  }
-
   resize()
 
-  $(window).on('resize', function () {
-    resize()
-  })
+  $(window).on('resize', resize)
 
-  //Wyświetl zawartość strony
-  $('#content').css('opacity', 1)
+  $(document).on('keydown', event => event.shiftKey && around($('#grid > .odkryte:hover').index()).addClass('hover'))
+
+  $(document).on('keyup', () => $pola.removeClass('hover'))
+
+  $('main').removeClass('hidden')
 })

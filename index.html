@@ -22,8 +22,8 @@
 </head>
 
 <body>
-  <div id="content">
-    <div class="naglowek">
+  <main class="hidden">
+    <nav>
       <div title="Bombs remaining">
         <span class="fa fa-bomb"></span> <span id="liczbaBomb"></span>
       </div>
@@ -41,9 +41,9 @@
       <div class="pomoc" title="Help">
         <span class="fa fa-question-circle"></span>
       </div>
-    </div>
+    </nav>
 
-    <div class="sterowanie">
+    <aside>
       <h1>
         <span class="fa fa-bomb"></span>
       </h1>
@@ -65,92 +65,10 @@
         <br>
         Hold it to mark it
       </div>
-    </div>
+    </aside>
 
-    <table id="tabela">
-      <tr>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
-      <tr>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
-      <tr>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
-      <tr>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
-      <tr>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
-      <tr>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
-      <tr>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
-      <tr>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
-    </table>
-
-  </div>
+    <div id="grid"></div>
+  </main>
 
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
   <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.11.3.min.js"><\/script>')</script>

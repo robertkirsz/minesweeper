@@ -1,7 +1,3 @@
-$tlo-kolor: hsla(0, 0%, 70%, 0.5);
-$naglowek-cien: 2px 2px 1px rgba(0, 0, 0, 0.15);
-$naglowek-cien-odwrocony: -2px -2px 1px rgba(0, 0, 0, 0.15);
-
 html {
   height: 100%;
 }
@@ -10,9 +6,10 @@ body {
   font-family: sans-serif;
   font-size: 14px;
   color: #333;
-  background-color: $tlo-kolor;
+  background-color: hsla(0, 0%, 70%, 0.5);
   background-image: url(../img/noise.png);
-  transition: background-color 1s;
+  background-position: center;
+  transition: background-color 0.2s;
   overflow: hidden;
   height: 100%;
   display: flex;
@@ -32,26 +29,26 @@ body {
   -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
 }
 
-#content {
+main {
   width: 100%;
-  min-width: 330px;
-  min-height: 370px;
-  max-width: 800px;
+  max-width: 640px;
   margin: auto;
+  padding: 0 8px 8px;
+  
+  &.hidden {
+    visibility: hidden;
+  }
 }
 
-.naglowek {
+nav {
   display: flex;
   color: rgba(0, 0, 0, 0.45);
+  font-size: clamp(24px, 5vw, 32px);
   font-weight: bold;
-  list-style: none;
-  padding: 0;
-  margin: 0;
   position: relative;
 
   > div {
     flex: 1;
-    font-size: 5vw;
     padding: 10px 0;
     cursor: default;
     text-align: center;
@@ -76,35 +73,11 @@ body {
 
     .pomoc {
       cursor: pointer;
-
-      .fa {
-        transition: transform 0.3s;
-        position: relative;
-
-        &.obrot {
-          transform: rotate(180deg);
-
-          &:after {
-            transform: rotate(-180deg);
-          }
-        }
-
-        &:after {
-          content: '';
-          position: absolute;
-          left: 0;
-          top: 2px;
-          right: 0;
-          bottom: 2px;
-          border-radius: 50%;
-          transition: all 0.3s;
-        }
-      }
     }
   }
 }
 
-.sterowanie {
+aside {
   display: none;
   position: absolute;
   top: 100px;
@@ -145,28 +118,30 @@ body {
   }
 }
 
-table {
-  border-collapse: initial;
-  border-spacing: 7px;
-  user-select: none;
+#grid {
+  display: grid;
+  gap: 4px;
   width: 100%;
-  height: 100%;
-  margin: -7px auto 0;
+  margin: auto 0;
+  transition: gap 0.2s;
 
-  border: 5px solid red;
-
-  td {
-    color: rgba(white, 0);
-    min-height: 15px;
-    min-width: 15px;
-    width: 10%;
-    height: 10%;
-    background: rgba(0, 0, 0, 0.3);
-    text-align: center;
-    font-weight: bold;
+  > div {
+    display: flex;
+    justify-content: center;
+    align-items: center;
     border-radius: 3px;
+    text-align: center;
+    font-size: clamp(16px, 5vw, 24px);
+    font-weight: bold;
     cursor: pointer;
-    outline: 0;
+
+    &.zakryte {
+      background: rgba(0, 0, 0, 0.3);
+
+      &.has-bomb {
+        border: 10px solid #d9534f;
+      }
+    }
 
     &.odkryte {
       color: rgba(0, 0, 0, 0.5);
@@ -189,36 +164,10 @@ table {
       background: #d9534f;
     }
   }
-
-  .fa-flag {
-    opacity: 0;
-    transition: opacity 0.3s;
-  }
 }
 
-@media screen and (min-width: 800px) {
-  table {
-    td.zakryte:not(.zaznaczone) {
-      &:hover,
-      &.hover {
-        background: rgba(0, 0, 0, 0.5);
-      }
-    }
-  }
-}
-
-@media screen and (max-width: 799px), (max-height: 799px) {
-  .mobile {
-    display: block;
-  }
-
-  .desktop {
-    display: none;
-  }
-}
-
-@media screen and (max-width: 500px), (max-height: 500px) {
-  .sterowanie {
+@media screen and (max-width: 500px) {
+  aside {
     width: auto;
     margin: 0;
     top: 50px;
@@ -233,6 +182,31 @@ table {
 
     p {
       margin: 0.5em 0;
+    }
+  }
+}
+
+@media screen and (max-width: 799px) {
+  .mobile {
+    display: block;
+  }
+
+  .desktop {
+    display: none;
+  }
+}
+
+@media screen and (min-width: 800px) {
+  #grid {
+    gap: 8px;
+
+    > div {
+      &.zakryte:not(.zaznaczone) {
+        &:hover,
+        &.hover {
+          background: rgba(0, 0, 0, 0.5);
+        }
+      }
     }
   }
 }
