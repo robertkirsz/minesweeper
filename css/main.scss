@@ -127,7 +127,6 @@ aside {
   gap: 4px;
   width: 100%;
   margin: auto 0;
-  transition: gap 0.2s;
 
   > div {
     display: flex;
@@ -143,7 +142,7 @@ aside {
       background: rgba(0, 0, 0, 0.3);
 
       &.has-bomb {
-        border: 10px solid #d9534f;
+        border: 0.3em solid #d9534f;
       }
     }
 

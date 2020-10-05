@@ -1,5 +1,5 @@
 $(function () {
-  const development = false
+  const development = true
 
   var numberOfBombs = 10
   var numberOfMarkedBombs = 0
@@ -7,7 +7,6 @@ $(function () {
   var lumberOfColumns = 10
   var numberOfFields = lumberOfColumns * lumberOfColumns
   var $bombs = null
-  var touchTimeout = null
 
   const $body = $('body')
   const $grid = $('#grid')
@@ -216,13 +215,15 @@ $(function () {
     kolorTla(100, 0)
   }
 
-  function leftClick(event) {
+  function leftClick() {
     var $this = $(this)
+    console.log($this)
 
     if ($bombs === null) firstClick($this)
 
     //Jeśli kliknięto na odkryte pole...
-    if ($this.hasClass('odkryte') && event.shiftKey) {
+    if ($this.hasClass('odkryte') && shiftPressed) {
+      // if ($this.hasClass('odkryte') && event.shiftKey) {
       //Wtedy odkryj wszystkie nieodkryte jeszcze pola naokoło klikniętego
       around($this.index())
         .not('.zaznaczone')
@@ -242,25 +243,25 @@ $(function () {
 
   function rightClick(field) {
     // TODO: fix this (I wanna be able to mark on first click)
-    if ($bombs !== null) {
-      const $field = $(field)
+    if (!$bombs) return
 
-      if ($field.hasClass('odkryte')) return
+    const $field = field instanceof HTMLElement ? $(field) : field
 
-      if ($field.hasClass('zaznaczone')) {
-        removeFlag($field)
-      } else if (numberOfBombs - numberOfMarkedBombs > 0) {
-        putFlag($field)
-      }
+    if ($field.hasClass('odkryte')) return
 
-      //Zaktualizuj licznik
-      numberOfMarkedBombs = $fields.filter('.zaznaczone').length
-      $bombCounter.text(numberOfBombs - numberOfMarkedBombs)
-      //Zmiana koloru tła - im więcej bomb znaleziono tym kolor bardziej zielony
-      kolorTla(100, numberOfMarkedBombs * skokBomb)
-      //Sprawdź czy znaleziono wszystkie bomby
-      checkGame()
+    if ($field.hasClass('zaznaczone')) {
+      removeFlag($field)
+    } else if (numberOfBombs - numberOfMarkedBombs > 0) {
+      putFlag($field)
     }
+
+    //Zaktualizuj licznik
+    numberOfMarkedBombs = $fields.filter('.zaznaczone').length
+    $bombCounter.text(numberOfBombs - numberOfMarkedBombs)
+    //Zmiana koloru tła - im więcej bomb znaleziono tym kolor bardziej zielony
+    kolorTla(100, numberOfMarkedBombs * skokBomb)
+    //Sprawdź czy znaleziono wszystkie bomby
+    checkGame()
   }
 
   function plantBombs(wykluczonePole) {
@@ -315,32 +316,47 @@ $(function () {
     $grid.css('height', $grid.width())
   }
 
+  var touchStart = null
+  var touchEnd = null
+  var shiftPressed = false
+
   if (isTouchDevice()) {
-    $grid.on('contextmenu', '> div', (a, b, c) => {
-      console.log({ a, b, c })
+    $grid.on('contextmenu', '> div', event => {
+      event.preventDefault()
       return false
     })
 
     $grid.on('touchstart', '> div', function () {
-      touchTimeout = setTimeout(() => {
-        rightClick(this)
-      }, 300)
+      console.log('touchstart')
+      touchStart = Date.now()
     })
 
     $grid.on('touchend', '> div', function () {
-      clearTimeout(touchTimeout)
+      console.log('touchend')
+      touchEnd = Date.now()
+
+      const elapsed = touchEnd - touchStart
+
+      console.log(elapsed)
+
+      if (elapsed < 200) {
+        console.log('left click')
+        leftClick.call(this)
+      } else {
+        console.log('right click')
+        rightClick(this)
+      }
     })
   } else {
     $grid.on('contextmenu', '> div', function () {
       rightClick(this)
       return false
     })
-    
+
     $grid.on('click', '> div', leftClick)
 
     $grid.on('mouseleave', '> div', () => $fields.removeClass('hover'))
   }
-
 
   $('.reset').on('click', function () {
     if ($(this).hasClass('disabled')) return
@@ -355,7 +371,7 @@ $(function () {
     $(this).addClass('disabled')
   })
 
-  $pomoc.on('click', function () {
+  $pomoc.on('click', () => {
     if ($aside.hasClass('active')) {
       $pomoc.find('.fa').removeClass('fa-times-circle').addClass('fa-question-circle')
       $aside.removeClass('active')
@@ -365,7 +381,7 @@ $(function () {
     }
   })
 
-  $aside.on('click', function () {
+  $aside.on('click', () => {
     $aside.removeClass('active')
     $pomoc.find('.fa').removeClass('fa-times-circle').addClass('fa-question-circle')
   })
@@ -374,9 +390,17 @@ $(function () {
 
   $(window).on('resize', resize)
 
-  $(document).on('keydown', event => event.shiftKey && around($('#grid > .odkryte:hover').index()).addClass('hover'))
+  // $(document).on('keydown', event => event.shiftKey && around($('#grid > .odkryte:hover').index()).addClass('hover'))
 
-  $(document).on('keyup', () => $fields.removeClass('hover'))
+  $(document).on('keyup', () => {
+    shiftPressed = false
+    $fields.removeClass('hover')
+  })
+
+  $(document).keypress(function (e) {
+    shiftPressed = e.shiftKey
+    // around($('#grid > .odkryte:hover').index()).addClass('hover')
+  })
 
   $bombCounter.text(numberOfBombs)
   $('main').removeClass('hidden')
