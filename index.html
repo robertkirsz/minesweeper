@@ -24,17 +24,17 @@
 <body>
   <main class="hidden">
     <nav>
-      <div title="Bombs remaining">
+      <div>
         <span class="fa fa-bomb"></span><span id="bomb-counter"></span>
       </div>
 
-      <div title="Time">
-        <span id="czas"><span class="minuty">0</span>:<span class="sekundy">00</span>
-      </div>
+      <time>
+        0:00
+      </time>
 
-      <div class="reset clickable disabled fa fa-refresh" title="Restart"></div>
+      <div class="reset clickable disabled fa fa-refresh"></div>
 
-      <div class="pomoc clickable fa fa-question-circle" title="Help"></div>
+      <div class="pomoc clickable fa fa-question-circle"></div>
     </nav>
 
     <aside>
@@ -66,10 +66,11 @@
     </aside>
 
     <div id="grid"></div>
+
+    <div id="indicator"></div>
   </main>
 
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-  <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.11.3.min.js"><\/script>')</script>
+  <script src="js/vendor/jquery-1.11.3.min.js"></script>
   <script src="js/main.js"></script>
 </body>
 

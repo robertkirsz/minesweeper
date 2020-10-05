@@ -12,8 +12,7 @@ $(function () {
   const $grid = $('#grid')
   const $reset = $('.reset')
   const $bombCounter = $('#bomb-counter')
-  const $minuty = $('#czas .minuty')
-  const $sekundy = $('#czas .sekundy')
+  const $time = $('time')
   const $aside = $('aside')
   const $pomoc = $('.pomoc')
 
@@ -30,37 +29,33 @@ $(function () {
 
   const $fields = $('#grid > div')
 
-  var zegar = {
-    sekundy: 0,
-    minuty: 0,
-    licznik: null,
+  const clock = {
+    time: 0,
+    interval: null,
     start: function () {
-      zegar.licznik = setInterval(function () {
-        zegar.sekundy = parseInt(++zegar.sekundy)
-        zegar.sekundy = zegar.sekundy < 10 ? '0' + zegar.sekundy : zegar.sekundy
-        $sekundy.text(zegar.sekundy)
-        if (zegar.sekundy > 59) {
-          zegar.sekundy = 0
-          $minuty.text(++zegar.minuty)
-          $sekundy.text('00')
-        }
+      clock.interval = setInterval(() => {
+        clock.time++
+        clock.display()
       }, 1000)
     },
+    display: function () {
+      const minutes = Math.floor(clock.time / 60)
+      const seconds = clock.time % 60
+      $time.text(`${minutes}:${seconds < 10 ? '0' : ''}${seconds}`)
+    },
     stop: function () {
-      clearInterval(zegar.licznik)
+      clearInterval(clock.interval)
     },
     zeruj: function () {
-      clearInterval(zegar.licznik)
-      zegar.sekundy = 0
-      zegar.minuty = 0
-      $sekundy.text('00')
-      $minuty.text('0')
+      clock.stop()
+      clock.time = 0
+      clock.display()
     }
   }
 
   function win() {
     $grid.css('pointer-events', 'none')
-    zegar.stop()
+    clock.stop()
     $('.fa-flag').remove()
     kolorTla(100, 80)
 
@@ -94,7 +89,7 @@ $(function () {
 
     $grid.css('pointer-events', 'none')
     kolorTla(0, 60)
-    zegar.stop()
+    clock.stop()
   }
 
   function checkGame() {
@@ -211,13 +206,12 @@ $(function () {
     plantBombs($field.index())
     generateNumbers()
     $reset.removeClass('disabled')
-    zegar.start()
+    clock.start()
     kolorTla(100, 0)
   }
 
   function leftClick() {
     var $this = $(this)
-    console.log($this)
 
     if ($bombs === null) firstClick($this)
 
@@ -255,7 +249,6 @@ $(function () {
       putFlag($field)
     }
 
-    //Zaktualizuj licznik
     numberOfMarkedBombs = $fields.filter('.zaznaczone').length
     $bombCounter.text(numberOfBombs - numberOfMarkedBombs)
     //Zmiana koloru tła - im więcej bomb znaleziono tym kolor bardziej zielony
@@ -316,6 +309,10 @@ $(function () {
     $grid.css('height', $grid.width())
   }
 
+  function log(args) {
+    if (development) console.log(args)
+  }
+
   var touchStart = null
   var touchEnd = null
   var shiftPressed = false
@@ -327,23 +324,23 @@ $(function () {
     })
 
     $grid.on('touchstart', '> div', function () {
-      console.log('touchstart')
+      log('touchstart')
       touchStart = Date.now()
     })
 
     $grid.on('touchend', '> div', function () {
-      console.log('touchend')
+      log('touchend')
       touchEnd = Date.now()
 
       const elapsed = touchEnd - touchStart
 
-      console.log(elapsed)
+      log(elapsed)
 
       if (elapsed < 200) {
-        console.log('left click')
+        log('left click')
         leftClick.call(this)
       } else {
-        console.log('right click')
+        log('right click')
         rightClick(this)
       }
     })
@@ -361,7 +358,7 @@ $(function () {
   $('.reset').on('click', function () {
     if ($(this).hasClass('disabled')) return
 
-    zegar.zeruj()
+    clock.zeruj()
     $fields.removeClass().addClass('zakryte').empty().data('rodzaj', '')
     $bombs = null
     $bombCounter.text(numberOfBombs)
