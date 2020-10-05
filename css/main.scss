@@ -112,10 +112,6 @@ aside {
     font-size: 0.9em;
     font-family: Menlo, Monaco, Consolas, 'Courier New', monospace;
   }
-
-  .mobile {
-    display: none;
-  }
 }
 
 #grid {
@@ -166,7 +162,7 @@ aside {
   }
 }
 
-@media screen and (max-width: 500px) {
+@media screen and (max-width: 639px) {
   aside {
     width: auto;
     margin: 0;
@@ -184,29 +180,25 @@ aside {
       margin: 0.5em 0;
     }
   }
-}
-
-@media screen and (max-width: 799px) {
-  .mobile {
-    display: block;
-  }
 
   .desktop {
     display: none;
   }
 }
 
-@media screen and (min-width: 800px) {
+@media screen and (min-width: 640px) {
   #grid {
     gap: 8px;
 
-    > div {
-      &.zakryte:not(.zaznaczone) {
+    > div.zakryte:not(.zaznaczone) {
         &:hover,
         &.hover {
           background: rgba(0, 0, 0, 0.5);
         }
       }
-    }
+  }
+
+  .mobile {
+    display: none;
   }
 }

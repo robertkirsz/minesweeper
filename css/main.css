@@ -28,8 +28,6 @@ aside h1 { margin: 10px 0; text-align: center; font-size: 6em; }
 
 aside kbd { color: #fff; background-color: #333; border-radius: 3px; margin-bottom: 3px; display: inline-block; padding: 2px 4px; font-size: 0.9em; font-family: Menlo, Monaco, Consolas, 'Courier New', monospace; }
 
-aside .mobile { display: none; }
-
 #grid { display: grid; gap: 4px; width: 100%; margin: auto 0; transition: gap 0.2s; }
 
 #grid > div { display: flex; justify-content: center; align-items: center; border-radius: 3px; text-align: center; font-size: clamp(14px, 4vw, 24px); font-weight: bold; cursor: pointer; }
@@ -46,12 +44,11 @@ aside .mobile { display: none; }
 
 #grid > div.bomba { color: white; background: #d9534f; }
 
-@media screen and (max-width: 500px) { aside { width: auto; margin: 0; top: 50px; left: 10px; right: 10px; pointer-events: auto; }
+@media screen and (max-width: 639px) { aside { width: auto; margin: 0; top: 50px; left: 10px; right: 10px; pointer-events: auto; }
   aside h1 { margin: 2px 0; font-size: 4em; }
-  aside p { margin: 0.5em 0; } }
-
-@media screen and (max-width: 799px) { .mobile { display: block; }
+  aside p { margin: 0.5em 0; }
   .desktop { display: none; } }
 
-@media screen and (min-width: 800px) { #grid { gap: 8px; }
-  #grid > div.zakryte:not(.zaznaczone):hover, #grid > div.zakryte:not(.zaznaczone).hover { background: rgba(0, 0, 0, 0.5); } }
+@media screen and (min-width: 640px) { #grid { gap: 8px; }
+  #grid > div.zakryte:not(.zaznaczone):hover, #grid > div.zakryte:not(.zaznaczone).hover { background: rgba(0, 0, 0, 0.5); }
+  .mobile { display: none; } }
