@@ -29,6 +29,10 @@ body {
   -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
 }
 
+.clickable:not(.disabled) {
+  cursor: pointer;
+}
+
 main {
   width: 100%;
   max-width: 640px;
@@ -49,31 +53,17 @@ nav {
   position: relative;
 
   > div {
+    display: flex;
+    justify-content: center;
     flex: 1;
     padding: 10px 0;
-    text-align: center;
     white-space: nowrap;
+    text-align: center;
+  }
 
-    .reset {
-      cursor: pointer;
-      background: none;
-      border: none;
-      padding: 0;
-
-      &.disabled {
-        opacity: 0.25;
-        pointer-events: none;
-
-        span {
-          transition: transform 0.3s;
-          transform: rotate(180deg);
-        }
-      }
-    }
-
-    &.pomoc {
-      cursor: pointer;
-    }
+  .reset.disabled {
+    opacity: 0.25;
+    pointer-events: none;
   }
 }
 
@@ -87,9 +77,9 @@ aside {
   z-index: 5;
   justify-content: center;
   align-items: center;
-  
+
   display: none;
-  
+
   &.active {
     display: flex;
   }
@@ -117,7 +107,7 @@ aside {
   }
 
   kbd {
-    color:white;
+    color: white;
     background-color: #333;
     border-radius: 3px;
     margin-bottom: 3px;
