@@ -51,7 +51,6 @@ nav {
   > div {
     flex: 1;
     padding: 10px 0;
-    cursor: default;
     text-align: center;
     white-space: nowrap;
 
@@ -72,7 +71,7 @@ nav {
       }
     }
 
-    .pomoc {
+    &.pomoc {
       cursor: pointer;
     }
   }
@@ -96,18 +95,25 @@ aside {
   }
 
   > div {
+    display: flex;
+    flex-direction: column;
     width: 100%;
-    max-width: 490px;
-    margin: 8px;
-    padding: 10px;
+    max-width: 420px;
+    margin: 16px;
+    padding: 16px;
     border-radius: 3px;
-    background: hsla(0, 0, 70, 1) url(../img/noise.png);
+    background: #b3b3b3 url(../img/noise.png);
+    position: relative;
   }
 
   h1 {
-    margin: 10px 0;
-    text-align: center;
+    align-self: center;
+    margin: 0 0 16px;
     font-size: 5em;
+  }
+
+  p {
+    margin: 0 0 16px;
   }
 
   kbd {
@@ -119,6 +125,13 @@ aside {
     padding: 2px 4px;
     font-size: 0.8em;
     font-family: Menlo, Monaco, Consolas, 'Courier New', monospace;
+  }
+
+  .fa-times-circle {
+    align-self: flex-end;
+    font-size: 2em;
+    cursor: pointer;
+    position: absolute;
   }
 }
 

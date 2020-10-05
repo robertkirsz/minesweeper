@@ -1,10 +1,10 @@
 $(function () {
-  const development = true
+  const development = false
 
   var numberOfBombs = 10
   var numberOfMarkedBombs = 0
   var skokBomb = 40 / numberOfBombs
-  var lumberOfColumns = 10
+  var lumberOfColumns = 8
   var numberOfFields = lumberOfColumns * lumberOfColumns
   var $bombs = null
 
@@ -372,13 +372,8 @@ $(function () {
   })
 
   $pomoc.on('click', () => {
-    if ($aside.hasClass('active')) {
-      $pomoc.find('.fa').removeClass('fa-times-circle').addClass('fa-question-circle')
-      $aside.removeClass('active')
-    } else {
-      $pomoc.find('.fa').removeClass('fa-question-circle').addClass('fa-times-circle')
-      $aside.addClass('active')
-    }
+    if ($aside.hasClass('active')) $aside.removeClass('active')
+    else $aside.addClass('active')
   })
 
   $aside.on('click', () => {
