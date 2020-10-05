@@ -172,6 +172,17 @@ aside {
   }
 }
 
+#indicator {
+  position: fixed;
+  top: 200px;
+  left: 200px;
+  transition: box-shadow 0.2s;
+
+  &.put-flag {
+    box-shadow: 0 0 50px 50px #f0ad4e;
+  }
+}
+
 @media screen and (max-width: 639px) {
   .desktop {
     display: none;

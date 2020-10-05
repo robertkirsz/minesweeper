@@ -46,6 +46,10 @@ aside .fa-times-circle { align-self: flex-end; font-size: 2em; cursor: pointer; 
 
 #grid > div.bomba { color: white; background: #d9534f; }
 
+#indicator { position: fixed; top: 200px; left: 200px; transition: box-shadow 0.2s; }
+
+#indicator.put-flag { box-shadow: 0 0 50px 50px #f0ad4e; }
+
 @media screen and (max-width: 639px) { .desktop { display: none; } }
 
 @media screen and (min-width: 640px) { #grid { gap: 8px; }

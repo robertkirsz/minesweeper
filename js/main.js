@@ -1,5 +1,5 @@
 $(function () {
-  const development = false
+  const development = true
 
   var numberOfBombs = 10
   var numberOfMarkedBombs = 0
@@ -15,6 +15,7 @@ $(function () {
   const $time = $('time')
   const $aside = $('aside')
   const $pomoc = $('.pomoc')
+  const $indicator = $('#indicator')
 
   function generateGrid() {
     for (var i = 0; i < numberOfFields; i++) {
@@ -61,8 +62,7 @@ $(function () {
 
     $bombs.each(function () {
       if ($(this).hasClass('zaznaczone')) {
-        //..na zielono, jeśli zostały zaznaczone
-        $(this).removeClass('zaznaczone').addClass('dobrze').prepend('<span class="fa fa-check"></span>')
+        $(this).removeClass('zaznaczone').addClass('dobrze').prepend('<span class="fa fa-check" />')
       }
     })
   }
@@ -309,8 +309,8 @@ $(function () {
     $grid.css('height', $grid.width())
   }
 
-  function log(args) {
-    if (development) console.log(args)
+  function log(...args) {
+    if (development) console.log(...args)
   }
 
   var touchStart = null
@@ -323,8 +323,11 @@ $(function () {
       return false
     })
 
-    $grid.on('touchstart', '> div', function () {
-      log('touchstart')
+    $grid.on('touchstart', '> div', function (event) {
+      const clientX = event.touches[0].clientX
+      const clientY = event.touches[0].clientY
+      $indicator.css({ top: clientY, left: clientX }).addClass('put-flag')
+      log('touchstart', { clientX, clientY })
       touchStart = Date.now()
     })
 
@@ -332,11 +335,7 @@ $(function () {
       log('touchend')
       touchEnd = Date.now()
 
-      const elapsed = touchEnd - touchStart
-
-      log(elapsed)
-
-      if (elapsed < 200) {
+      if (touchEnd - touchStart < 200) {
         log('left click')
         leftClick.call(this)
       } else {
