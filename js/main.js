@@ -1,6 +1,6 @@
 $(function () {
   const development = false
-  
+
   var numberOfBombs = 10
   var numberOfMarkedBombs = 0
   var skokBomb = 40 / numberOfBombs
@@ -8,8 +8,7 @@ $(function () {
   var numberOfFields = lumberOfColumns * lumberOfColumns
   var $bombs = null
   var touchTimeout = null
-  var mobileTimer
-  
+
   const $body = $('body')
   const $grid = $('#grid')
   const $reset = $('.reset')
@@ -17,6 +16,7 @@ $(function () {
   const $minuty = $('#czas .minuty')
   const $sekundy = $('#czas .sekundy')
   const $aside = $('aside')
+  const $pomoc = $('.pomoc')
 
   function generateGrid() {
     for (var i = 0; i < numberOfFields; i++) {
@@ -88,12 +88,10 @@ $(function () {
     $fields.filter('.zaznaczone').prepend('<span class="fa fa-times" />')
     $fields.filter('.zakryte').removeClass('zakryte').addClass('odkryte')
 
-    $fields
-      .filter(':not(.zaznaczone):not(.bomba):not(.dobrze)')
-      .each((_, element) => {
-        const numberOfBombs = $(element).data('number')
-        if (numberOfBombs > 0) $(element).text(numberOfBombs)
-      })
+    $fields.filter(':not(.zaznaczone):not(.bomba):not(.dobrze)').each((_, element) => {
+      const numberOfBombs = $(element).data('number')
+      if (numberOfBombs > 0) $(element).text(numberOfBombs)
+    })
 
     $grid.css('pointer-events', 'none')
     kolorTla(0, 60)
@@ -318,27 +316,31 @@ $(function () {
   }
 
   if (isTouchDevice()) {
-    $grid.on('contextmenu', '> div', () => false)
+    $grid.on('contextmenu', '> div', (a, b, c) => {
+      console.log({ a, b, c })
+      return false
+    })
+
+    $grid.on('touchstart', '> div', function () {
+      touchTimeout = setTimeout(() => {
+        rightClick(this)
+      }, 300)
+    })
+
+    $grid.on('touchend', '> div', function () {
+      clearTimeout(touchTimeout)
+    })
   } else {
     $grid.on('contextmenu', '> div', function () {
       rightClick(this)
       return false
     })
+    
+    $grid.on('click', '> div', leftClick)
+
+    $grid.on('mouseleave', '> div', () => $fields.removeClass('hover'))
   }
 
-  $grid.on('click', '> div', leftClick)
-
-  $grid.on('touchstart', '> div', function () {
-    touchTimeout = setTimeout(() => {
-      rightClick(this)
-    }, 300)
-  })
-
-  $grid.on('touchend', '> div', function () {
-    clearTimeout(touchTimeout)
-  })
-
-  $grid.on('mouseleave', '> div', () => $fields.removeClass('hover'))
 
   $('.reset').on('click', function () {
     if ($(this).hasClass('disabled')) return
@@ -353,29 +355,19 @@ $(function () {
     $(this).addClass('disabled')
   })
 
-  $('.pomoc').on('click', function () {
-    if ($aside.is(':visible')) {
+  $pomoc.on('click', function () {
+    if ($aside.hasClass('active')) {
+      $pomoc.find('.fa').removeClass('fa-times-circle').addClass('fa-question-circle')
       $aside.removeClass('active')
-
-      $('.pomoc').find('.fa').removeClass('fa-times-circle').addClass('fa-question-circle')
-
-      mobileTimer = setTimeout(function () {
-        $aside.hide()
-      }, 200)
     } else {
-      clearTimeout(mobileTimer)
-      $('.pomoc').find('.fa').removeClass('fa-question-circle').addClass('fa-times-circle')
-      $aside.show().focus().addClass('active')
+      $pomoc.find('.fa').removeClass('fa-question-circle').addClass('fa-times-circle')
+      $aside.addClass('active')
     }
   })
 
   $aside.on('click', function () {
     $aside.removeClass('active')
-    $('.pomoc').find('.fa').removeClass('fa-times-circle').addClass('fa-question-circle')
-
-    mobileTimer = setTimeout(function () {
-      $aside.hide()
-    }, 300)
+    $pomoc.find('.fa').removeClass('fa-times-circle').addClass('fa-question-circle')
   })
 
   resize()
