@@ -8,7 +8,7 @@ main { width: 100%; max-width: 640px; margin: auto; padding: 0 8px 8px; }
 
 main.hidden { visibility: hidden; }
 
-nav { display: flex; color: rgba(0, 0, 0, 0.45); font-size: clamp(24px, 5vw, 32px); font-weight: bold; position: relative; }
+nav { display: flex; color: rgba(0, 0, 0, 0.45); font-size: clamp(22px, 5vw, 32px); font-weight: bold; position: relative; }
 
 nav > div { flex: 1; padding: 10px 0; cursor: default; text-align: center; white-space: nowrap; }
 
@@ -32,7 +32,7 @@ aside .mobile { display: none; }
 
 #grid { display: grid; gap: 4px; width: 100%; margin: auto 0; transition: gap 0.2s; }
 
-#grid > div { display: flex; justify-content: center; align-items: center; border-radius: 3px; text-align: center; font-size: clamp(16px, 5vw, 24px); font-weight: bold; cursor: pointer; }
+#grid > div { display: flex; justify-content: center; align-items: center; border-radius: 3px; text-align: center; font-size: clamp(14px, 4vw, 24px); font-weight: bold; cursor: pointer; }
 
 #grid > div.zakryte { background: rgba(0, 0, 0, 0.3); }
 

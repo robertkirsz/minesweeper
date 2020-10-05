@@ -1,22 +1,22 @@
 $(function () {
-  var $liczbaBomb = $('#liczbaBomb')
-  var liczbaBomb = 15
-  var liczbaOznaczonychBomb = 0
-  var skokBomb = 40 / liczbaBomb
+  const development = false
+  
+  var numberOfBombs = 10
+  var numberOfMarkedBombs = 0
+  var skokBomb = 40 / numberOfBombs
   var lumberOfColumns = 10
   var numberOfFields = lumberOfColumns * lumberOfColumns
-  var $bomby = null
-  var $minuty = $('#czas .minuty')
-  var $sekundy = $('#czas .sekundy')
+  var $bombs = null
   var touchTimeout = null
-  var $aside = $('aside')
   var mobileTimer
-
+  
   const $body = $('body')
   const $grid = $('#grid')
   const $reset = $('.reset')
-
-  $liczbaBomb.text(liczbaBomb)
+  const $bombCounter = $('#bomb-counter')
+  const $minuty = $('#czas .minuty')
+  const $sekundy = $('#czas .sekundy')
+  const $aside = $('aside')
 
   function generateGrid() {
     for (var i = 0; i < numberOfFields; i++) {
@@ -29,7 +29,7 @@ $(function () {
 
   generateGrid()
 
-  const $pola = $('#grid > div')
+  const $fields = $('#grid > div')
 
   var zegar = {
     sekundy: 0,
@@ -65,7 +65,7 @@ $(function () {
     $('.fa-flag').remove()
     kolorTla(100, 80)
 
-    $bomby.each(function () {
+    $bombs.each(function () {
       if ($(this).hasClass('zaznaczone')) {
         //..na zielono, jeśli zostały zaznaczone
         $(this).removeClass('zaznaczone').addClass('dobrze').prepend('<span class="fa fa-check"></span>')
@@ -76,7 +76,7 @@ $(function () {
   function lose() {
     $('.fa-flag').remove()
 
-    $bomby.each(function () {
+    $bombs.each(function () {
       if (isFlag(this)) {
         removeFlag(this)
         putCheckmark(this)
@@ -85,13 +85,11 @@ $(function () {
       }
     })
 
-    $pola.filter('.zaznaczone').prepend('<span class="fa fa-times"></span>')
+    $fields.filter('.zaznaczone').prepend('<span class="fa fa-times" />')
+    $fields.filter('.zakryte').removeClass('zakryte').addClass('odkryte')
 
-    $pola
-      .filter('.zakryte')
-      .not('.zaznaczone')
-      .removeClass('zakryte')
-      .addClass('odkryte')
+    $fields
+      .filter(':not(.zaznaczone):not(.bomba):not(.dobrze)')
       .each((_, element) => {
         const numberOfBombs = $(element).data('number')
         if (numberOfBombs > 0) $(element).text(numberOfBombs)
@@ -103,8 +101,8 @@ $(function () {
   }
 
   function checkGame() {
-    const hasAllBombsMarked = $bomby.filter('.zaznaczone').length === liczbaBomb
-    const hasNoUncoveredFields = $pola.filter('.zakryte').not('.zaznaczone').length === 0
+    const hasAllBombsMarked = $bombs.filter('.zaznaczone').length === numberOfBombs
+    const hasNoUncoveredFields = $fields.filter('.zakryte').not('.zaznaczone').length === 0
 
     if (hasAllBombsMarked && hasNoUncoveredFields) win()
   }
@@ -113,7 +111,9 @@ $(function () {
     $body.css('background-color', 'hsla(' + hue + ', ' + saturation + '%, 70%, 0.5')
   }
 
-  const neighbors = indexInRow => index => index >= indexInRow - 1 && index <= indexInRow + 1
+  function neighbors(indexInRow) {
+    return index => index >= indexInRow - 1 && index <= indexInRow + 1
+  }
 
   function around(index) {
     if (index < 0) return $()
@@ -132,9 +132,9 @@ $(function () {
 
     const indexInCurrentRow = index - lumberOfColumns * currentRowIndex
 
-    const upperRow = $pola.slice(upperRowStart, upperRowEnd).filter(neighbors(indexInCurrentRow))
-    const currentRow = $pola.slice(currentRowStart, currentRowEnd).filter(neighbors(indexInCurrentRow))
-    const lowerRow = $pola.slice(lowerRowStart, lowerRowEnd).filter(neighbors(indexInCurrentRow))
+    const upperRow = $fields.slice(upperRowStart, upperRowEnd).filter(neighbors(indexInCurrentRow))
+    const currentRow = $fields.slice(currentRowStart, currentRowEnd).filter(neighbors(indexInCurrentRow))
+    const lowerRow = $fields.slice(lowerRowStart, lowerRowEnd).filter(neighbors(indexInCurrentRow))
 
     return upperRow.add(currentRow).add(lowerRow)
   }
@@ -199,7 +199,7 @@ $(function () {
   }
 
   function generateNumbers() {
-    $pola
+    $fields
       .filter((_, element) => $(element).data('rodzaj') !== 'bomba')
       .each((_, element) => {
         const numberOfSurroundingBombs = around($(element).index()).filter(
@@ -221,7 +221,7 @@ $(function () {
   function leftClick(event) {
     var $this = $(this)
 
-    if ($bomby === null) firstClick($this)
+    if ($bombs === null) firstClick($this)
 
     //Jeśli kliknięto na odkryte pole...
     if ($this.hasClass('odkryte') && event.shiftKey) {
@@ -230,7 +230,7 @@ $(function () {
         .not('.zaznaczone')
         .each((_, element) => odkryjPole(element))
 
-      $pola.removeClass('hover')
+      $fields.removeClass('hover')
     }
 
     if (isFlag($this)) return removeFlag($this)
@@ -244,22 +244,22 @@ $(function () {
 
   function rightClick(field) {
     // TODO: fix this (I wanna be able to mark on first click)
-    if ($bomby !== null) {
+    if ($bombs !== null) {
       const $field = $(field)
 
       if ($field.hasClass('odkryte')) return
 
       if ($field.hasClass('zaznaczone')) {
         removeFlag($field)
-      } else if (liczbaBomb - liczbaOznaczonychBomb > 0) {
+      } else if (numberOfBombs - numberOfMarkedBombs > 0) {
         putFlag($field)
       }
 
       //Zaktualizuj licznik
-      liczbaOznaczonychBomb = $pola.filter('.zaznaczone').length
-      $liczbaBomb.text(liczbaBomb - liczbaOznaczonychBomb)
+      numberOfMarkedBombs = $fields.filter('.zaznaczone').length
+      $bombCounter.text(numberOfBombs - numberOfMarkedBombs)
       //Zmiana koloru tła - im więcej bomb znaleziono tym kolor bardziej zielony
-      kolorTla(100, liczbaOznaczonychBomb * skokBomb)
+      kolorTla(100, numberOfMarkedBombs * skokBomb)
       //Sprawdź czy znaleziono wszystkie bomby
       checkGame()
     }
@@ -268,10 +268,10 @@ $(function () {
   function plantBombs(wykluczonePole) {
     var tablicaIndeksow = [] // Tablica zawięrająca indeksy pól, które zostano przerobione na bomby
     // Sprawdź czy ilość bomb do wypełnienia tablicy jest mniejsza niż ilość dostępnych pól
-    if (liczbaBomb < numberOfFields) {
+    if (numberOfBombs < numberOfFields) {
       // Dopóki ilość indeksów jest mniejsza niż zadeklarowana ilość bomb, którymi ma zostać wypełniona tabela...
-      while (tablicaIndeksow.length < liczbaBomb) {
-        var losowaLiczba = generateRandom(0, numberOfFields - 1, wykluczonePole), // Liczba od 0 do liczbaBomb - 1
+      while (tablicaIndeksow.length < numberOfBombs) {
+        var losowaLiczba = generateRandom(0, numberOfFields - 1, wykluczonePole), // Liczba od 0 do numberOfBombs - 1
           znaleziono = false // Domyślna wartość dla zmiennej pilnującej, czy liczby się nie powtarzają
 
         // Przeszukaj wszystkie dotychczas zebrane numery
@@ -288,17 +288,16 @@ $(function () {
           // Zapisz go w tablicy
           tablicaIndeksow[tablicaIndeksow.length] = losowaLiczba
           // Utwórz bombę na polu o indeksie równym wylosowanej liczbie
-          $pola.eq(losowaLiczba).data('rodzaj', 'bomba')
+          $fields.eq(losowaLiczba).data('rodzaj', 'bomba')
         }
       }
 
       // Zapisz bomby do zmiennej
-      $bomby = $pola.filter(function () {
+      $bombs = $fields.filter(function () {
         return $(this).data('rodzaj') === 'bomba'
       })
 
-      // DEVTOOLS
-      // $bomby.addClass('has-bomb')
+      if (development) $bombs.addClass('has-bomb')
     } else {
       // Jeśli ilość bomb nie jest mniejsza niż ilość pól, wyświetl wiadomość
       console.error('Liczba bomb musi być mniejsza niż liczba pól')
@@ -339,16 +338,16 @@ $(function () {
     clearTimeout(touchTimeout)
   })
 
-  $grid.on('mouseleave', '> div', () => $pola.removeClass('hover'))
+  $grid.on('mouseleave', '> div', () => $fields.removeClass('hover'))
 
   $('.reset').on('click', function () {
     if ($(this).hasClass('disabled')) return
 
     zegar.zeruj()
-    $pola.removeClass().addClass('zakryte').empty().data('rodzaj', '')
-    $bomby = null
-    $liczbaBomb.text(liczbaBomb)
-    liczbaOznaczonychBomb = 0
+    $fields.removeClass().addClass('zakryte').empty().data('rodzaj', '')
+    $bombs = null
+    $bombCounter.text(numberOfBombs)
+    numberOfMarkedBombs = 0
     $grid.css('pointer-events', 'auto')
     kolorTla(0, 0)
     $(this).addClass('disabled')
@@ -385,7 +384,8 @@ $(function () {
 
   $(document).on('keydown', event => event.shiftKey && around($('#grid > .odkryte:hover').index()).addClass('hover'))
 
-  $(document).on('keyup', () => $pola.removeClass('hover'))
+  $(document).on('keyup', () => $fields.removeClass('hover'))
 
+  $bombCounter.text(numberOfBombs)
   $('main').removeClass('hidden')
 })
