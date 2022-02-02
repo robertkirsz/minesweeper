@@ -210,14 +210,13 @@ $(function () {
     kolorTla(100, 0)
   }
 
-  function leftClick() {
+  function leftClick(event) {
     var $this = $(this)
 
     if ($bombs === null) firstClick($this)
 
     //Jeśli kliknięto na odkryte pole...
-    if ($this.hasClass('odkryte') && shiftPressed) {
-      // if ($this.hasClass('odkryte') && event.shiftKey) {
+    if ($this.hasClass('odkryte') && event.shiftKey) {
       //Wtedy odkryj wszystkie nieodkryte jeszcze pola naokoło klikniętego
       around($this.index())
         .not('.zaznaczone')
@@ -315,7 +314,6 @@ $(function () {
 
   var touchStart = null
   var touchEnd = null
-  var shiftPressed = false
 
   if (isTouchDevice()) {
     $grid.on('contextmenu', '> div', event => {
@@ -382,18 +380,11 @@ $(function () {
 
   $(window).on('resize', resize)
 
-  // $(document).on('keydown', event => event.shiftKey && around($('#grid > .odkryte:hover').index()).addClass('hover'))
+  $(document).on('keydown', event => event.shiftKey && around($('#grid > .odkryte:hover').index()).addClass('hover'))
 
-  $(document).on('keyup', () => {
-    shiftPressed = false
-    $fields.removeClass('hover')
-  })
-
-  $(document).keypress(function (e) {
-    shiftPressed = e.shiftKey
-    // around($('#grid > .odkryte:hover').index()).addClass('hover')
-  })
+  $(document).on('keyup', () => $fields.removeClass('hover'))
 
   $bombCounter.text(numberOfBombs)
+
   $('main').removeClass('hidden')
 })
